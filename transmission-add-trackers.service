@@ -1,0 +1,12 @@
+[Unit]
+Description=Add Trackers for Transmission Torrents
+Requires=network.target
+
+[Service]
+User=debian-transmission
+ExecStart=/path/to/trans-add-trackers.sh
+CPUSchedulingPolicy=idle
+Nice=19
+
+[Install]
+WantedBy=multi-user.target
