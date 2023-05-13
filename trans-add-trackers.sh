@@ -33,17 +33,19 @@ add_trackers() {
   hash_long="$1"
   hash_short=$(echo "$1" | cut -c -8)
 
-  # Transmission doesn't support IPv6 and WebSocket trackers, see https://github.com/transmission/transmission/issues/5509
+  # Transmission doesn't support WebSocket trackers, see https://github.com/transmission/transmission/issues/5509
 
   # Trackers from Transmission don't contain paths, e.g. http://example:80
+  # IPv6 trackers will be wrong like http://[2001:-1 , which should be a bug
   old_trackers=$(transmission-remote "$HOST" --auth "$AUTH" --torrent "$hash_long" --info-trackers | grep "Tracker [[:digit:]]\+:" | awk '{ print $3 }')
   # Escape square brackets for `sed` to work with IPv6, i.e. [...] -> \[...\]
-  # No need in theory.
   old_trackers=$(echo "$old_trackers" | sed 's|\[|\\\[|g; s|\]|\\\]|g')
 
   # Trackers fetched from the web contain paths, e.g. http://example:80/announce
-  new_trackers=$(sed '\|\[|d; \|wss\?://|d' "$TRACKERS")
+  # new_trackers=$(sed '\|\[|d; \|wss\?://|d' "$TRACKERS")
+  new_trackers=$(cat "$TRACKERS")
   for ot in $old_trackers; do
+    # Cannot remove duplicate IPv6 trackers due to incomplete addresses
     new_trackers=$(echo "$new_trackers" | sed "\|$ot|d")
   done
   if [ -z "$new_trackers" ]; then
@@ -54,10 +56,11 @@ add_trackers() {
   added=0
   total=$(echo "$new_trackers" | wc -l)
   for nt in $new_trackers; do
+    # Duplicate and WebSocket trackers will cause "Error: invalid argument"
     if transmission-remote "$HOST" --auth "$AUTH" --torrent "$hash_long" --tracker-add "$nt" | grep -qs success; then
       : $((added += 1))
-      printf "\rAdding $total new tracker(s) for $hash_short: %s" "$added/$total" >&2
     fi
+    printf "\rAdding $total new tracker(s) for $hash_short: %s" "$added/$total" >&2
   done
   printf "\n" >&2
   [ "$added" -eq "$total" ]
