@@ -46,6 +46,11 @@ $ systemctl start transmission-add-trackers.service  # 立即启动
 $ systemctl status transmission-add-trackers.service # 查看状态
 ```
 
+## 已知问题
+
+- [不支持 WebSocket Tracker 服务器](https://github.com/transmission/transmission/issues/5509)。
+- `transmission-remote` 无法正确获取已添加的 IPv6 Tracker 服务器，导致重复添加时失败。
+
 ## 感谢
 
 - https://github.com/XIU2/TrackersListCollection
@@ -94,6 +99,11 @@ $ systemctl enable transmission-add-trackers.service
 $ systemctl start transmission-add-trackers.service
 $ systemctl status transmission-add-trackers.service
 ```
+
+## Known issues
+
+- [Doesn't support WebSocket trackers](https://github.com/transmission/transmission/issues/5509).
+- Can't retrieve existing IPv6 trackers with `transmission-remote` properly, which will cause errors when adding duplicates.
 
 ## Credits
 
